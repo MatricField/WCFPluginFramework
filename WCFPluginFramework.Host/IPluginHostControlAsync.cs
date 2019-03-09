@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 namespace WCFPluginFramework.Host
 {
     // NOTE: You can use the "Rename" command on the "Refactor" menu to change the interface name "IPluginHostControl" in both code and config file together.
-    [ServiceContract]
-    public interface IPluginHostControl
+    [ServiceContract(Name = nameof(IPluginHostControl))]
+    public interface IPluginHostControlAsync
     {
         [OperationContract]
-        void Shutdown();
+        Task ShutdownAsync();
 
         [OperationContract]
-        int HeartBeat(int data);
+        Task<int> HeartBeatAsync(int data);
     }
 }
