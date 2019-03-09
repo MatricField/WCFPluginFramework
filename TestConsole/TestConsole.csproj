@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{675AC7A2-258F-4C09-806E-BFF82FCA507D}</ProjectGuid>
+    <ProjectGuid>{D9C14242-D8FA-4313-84B4-DA6F061E43DC}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>WCFPluginFramework.Host</RootNamespace>
-    <AssemblyName>WCFPluginFramework.Host</AssemblyName>
+    <RootNamespace>TestConsole</RootNamespace>
+    <AssemblyName>TestConsole</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <WcfConfigValidationEnabled>True</WcfConfigValidationEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -23,7 +22,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -38,7 +36,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -47,15 +44,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HostKeepAlive.cs" />
-    <Compile Include="IPluginHostControl.cs" />
-    <Compile Include="PluginHost.cs" />
-    <Compile Include="HostManager.cs" />
-    <Compile Include="PluginHostControl.cs" />
+    <Compile Include="TestConsole.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TestPlugin\TestPlugin.csproj">
+      <Project>{dcbfe3a1-0465-422e-aca4-a235b66526e9}</Project>
+      <Name>TestPlugin</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WCFPluginFramework.Host\WCFPluginFramework.Host.csproj">
+      <Project>{675ac7a2-258f-4c09-806e-bff82fca507d}</Project>
+      <Name>WCFPluginFramework.Host</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
