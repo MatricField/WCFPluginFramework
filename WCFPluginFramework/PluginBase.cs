@@ -11,6 +11,7 @@ namespace WCFPluginFramework
     /// <summary>
     /// Extend this class to create a plugin
     /// </summary>
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerSession)]
     public abstract class PluginBase :
         IPlugin
     {

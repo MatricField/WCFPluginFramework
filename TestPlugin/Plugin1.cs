@@ -20,8 +20,7 @@ namespace TestPlugin
                     Contact = "Go talk to god"
                 },
                 Description = "Aaaaaaaaaah",
-                DisplayName = "Plugin1",
-                Guid = typeof(Plugin1).GUID
+                DisplayName = "Plugin1"
             };
 
         private const PluginCapability CAPABILITY =

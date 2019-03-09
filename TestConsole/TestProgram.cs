@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.Serialization.Json;
 using WCFPluginFramework.Host;
 using WCFPluginFramework.Common;
 using System.ServiceModel;
@@ -28,7 +27,7 @@ namespace TestConsole
                 Console.WriteLine("Connected, Press Cancel key to continue");
                 var cancellation = new CancellationTokenSource();
                 var heartbeat = RunHeartBeatLoop(pluginHostControl, cancellation.Token);
-                //await WaitForCancelKey();
+                await WaitForCancelKey();
 
                 await LoadPluginAssemblyAndListPlugins(pluginHostControl);
                 Console.WriteLine("Press Cancel key to continue");

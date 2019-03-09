@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using System.ServiceModel.Description;
 using System.Text;
 using System.Threading.Tasks;
 using WCFPluginFramework.Metadata;
@@ -12,8 +13,10 @@ namespace WCFPluginFramework.Host
     {
         public ServiceHost ServiceHost { get; }
 
-        public IEnumerable<Uri> Endpoints =>
-            ServiceHost.Description.Endpoints.Select(x => x.Address.Uri);
+        public Uri BaseAddress { get; }
+
+        public IEnumerable<ServiceEndpoint> Endpoints =>
+            ServiceHost.Description.Endpoints;
 
         public PluginHost(PluginDescription desc, Uri pluginBaseAddress)
         {
@@ -31,14 +34,14 @@ namespace WCFPluginFramework.Host
                     serviceHost.AddServiceEndpoint(
                         contractInterface,
                         new NetNamedPipeBinding(),
-                        endpoint
-                        );
+                        endpoint);
                 }
             }
             serviceHost.AddMetaDataExchange();
             serviceHost.PrintEndPoints();
-            serviceHost.Open();
-            
+
+            BaseAddress = pluginBaseAddress;
+            ServiceHost = serviceHost;
         }
     }
 }

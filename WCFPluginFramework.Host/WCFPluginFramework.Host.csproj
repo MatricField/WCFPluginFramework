@@ -60,9 +60,6 @@
     <Compile Include="ServiceHostExtension.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\WCFPluginFramework\WCFPluginFramework.csproj">
       <Project>{70c13526-cc43-45a7-9075-3a59618f97bd}</Project>
       <Name>WCFPluginFramework</Name>
