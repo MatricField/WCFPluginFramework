@@ -3,13 +3,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using WCFPluginFramework.Host;
+using WCFPluginFramework.Common;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Threading;
 
 namespace TestConsole
 {
-    class TestConsole
+    class TestProgram
     {
         const string NamedPipeBaseUri =
             "net.pipe://localhost/";
@@ -18,16 +19,21 @@ namespace TestConsole
             using (var job = new Job())
             {
                 var pluginBaseAddress =
-                    new Uri(NamedPipeBaseUri + Guid.NewGuid() + "/");
+                new Uri(NamedPipeBaseUri + Guid.NewGuid() + "/");
                 var hostProcess = RunHost(pluginBaseAddress);
                 job.AddProcess(hostProcess);
                 Console.WriteLine($"Host process started PID={hostProcess.Id}");
 
                 var pluginHostControl = await ConnectToHostControllerAsync(pluginBaseAddress);
-                Console.WriteLine("Connected, Press Cancel key to stop");
+                Console.WriteLine("Connected, Press Cancel key to continue");
                 var cancellation = new CancellationTokenSource();
                 var heartbeat = RunHeartBeatLoop(pluginHostControl, cancellation.Token);
+                //await WaitForCancelKey();
+
+                await LoadPluginAssemblyAndListPlugins(pluginHostControl);
+                Console.WriteLine("Press Cancel key to continue");
                 await WaitForCancelKey();
+
                 cancellation.Cancel();
                 try
                 {
@@ -37,6 +43,37 @@ namespace TestConsole
                 await pluginHostControl.ShutdownAsync();
                 Console.WriteLine("Shutting down");
                 hostProcess.WaitForExit();
+            }
+        }
+
+        static async Task LoadPluginAssemblyAndListPlugins(IPluginHostControlAsync pluginHost)
+        {
+            try
+            {
+                await pluginHost.LoadPluginAssemblyAsync(typeof(TestPlugin.Plugin1).Assembly.Location);
+                var availablePlugins = await pluginHost.EnumerateAvailablePluginsAsync();
+                Console.WriteLine("Available plugins");
+                foreach (var plugin in availablePlugins)
+                {
+                    Console.WriteLine($"{plugin.ServiceName}:");
+                    Console.WriteLine($"Implementation: {plugin.ImplementationName}");
+                    Console.WriteLine("Contracts:");
+                    foreach (var contrct in plugin.Contracts)
+                    {
+                        Console.WriteLine($"    {contrct.ContractInterfaceName}");
+                        Console.WriteLine($"    Endpoints:");
+                        foreach(var endpoint in contrct.EndPoints)
+                        {
+                            Console.WriteLine($"        {endpoint}");
+                        }
+                    }
+                    Console.WriteLine();
+                }
+            }
+            catch(FaultException<SerializableException> ex)
+            {
+                var oex = Activator.CreateInstance(ex.Detail.OriginalException) as Exception;
+                throw oex;
             }
         }
 
@@ -72,16 +109,16 @@ namespace TestConsole
                     {
                         Console.WriteLine($"Heart beat error: expected {beat}, but returned {repeat}");
                     }
-                    else
-                    {
-                        Console.WriteLine($"Heart beat: {beat}");
-                    }
+                    //else
+                    //{
+                    //    Console.WriteLine($"Heart beat: {beat}");
+                    //}
                 }
                 else
                 {
                 Console.WriteLine("Heart beat timed out");
-            }
-            await delayPeriod;
+                }
+                await delayPeriod;
             }
         }
 
@@ -116,9 +153,7 @@ namespace TestConsole
 
         static Process RunHost(Uri pluginBaseAddress)
         {
-            var path = typeof(IHeartBeatService).Assembly.Location;
-
-            #if DEBUG
+            var path = typeof(PluginHostControl).Assembly.Location;
             var info =
                 new ProcessStartInfo()
                 {
@@ -127,17 +162,6 @@ namespace TestConsole
                     WorkingDirectory = Path.GetDirectoryName(path),
                     Arguments = pluginBaseAddress.ToString()
                 };
-            #else
-            var info =
-                new ProcessStartInfo()
-                {
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    FileName = Path.GetFileName(path),
-                    WorkingDirectory = Path.GetDirectoryName(path),
-                    Arguments = pluginBaseAddress.ToString()
-                };
-            #endif
             return Process.Start(info);
         }
     }

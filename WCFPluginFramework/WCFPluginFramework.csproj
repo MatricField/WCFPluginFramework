@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -42,10 +43,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IPlugin.cs" />
-    <Compile Include="PluginCapability.cs" />
-    <Compile Include="PluginAttribute.cs" />
+    <Compile Include="Common\IHeartBeatService.cs" />
+    <Compile Include="Common\IHeartBeatServiceAsync.cs" />
+    <Compile Include="Common\IPluginAsync.cs" />
+    <Compile Include="Common\IPlugin.cs" />
+    <Compile Include="Common\SerializableException.cs" />
+    <Compile Include="Metadata\IPluginDescriptionProvider.cs" />
+    <Compile Include="Metadata\PluginDescription.cs" />
+    <Compile Include="Metadata\ServiceContractDescription.cs" />
+    <Compile Include="Common\PluginAuthorInfo.cs" />
+    <Compile Include="Common\PluginCapability.cs" />
+    <Compile Include="Metadata\PluginDescriptionAttribute.cs" />
+    <Compile Include="Common\PluginInfo.cs" />
+    <Compile Include="PluginBase.cs" />
+    <Compile Include="PluginDescriptionBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Metadata\PluginDescriptionBuilder.cs" />
+    <Compile Include="Metadata\ServiceContractDescriptionBuilder.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

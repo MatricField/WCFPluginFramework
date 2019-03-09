@@ -10,7 +10,7 @@ namespace WCFPluginFramework.Host
 {
     static class ServiceHostExtension
     {
-        public static void AddMetaDataExchange(this ServiceHost host, Uri pluginBaseAddress)
+        public static void AddMetaDataExchange(this ServiceHost host)
         {
             var serviceMetadataBehavior = host.Description.Behaviors.Find<ServiceMetadataBehavior>();
             if (null == serviceMetadataBehavior)
@@ -21,7 +21,7 @@ namespace WCFPluginFramework.Host
             host.AddServiceEndpoint(
                 typeof(IMetadataExchange),
                 MetadataExchangeBindings.CreateMexNamedPipeBinding(),
-                new Uri(pluginBaseAddress, "mex"));
+                "mex");
         }
 
         public static void PrintBaseAddress(this ServiceHost host)

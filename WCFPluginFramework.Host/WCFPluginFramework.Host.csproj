@@ -51,11 +51,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IHeartBeatServiceAsync.cs" />
-    <Compile Include="IHeartBeatService.cs" />
     <Compile Include="IPluginHostControlAsync.cs" />
     <Compile Include="IPluginHostControl.cs" />
-    <Compile Include="JobManagement.cs" />
+    <Compile Include="PluginHost.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="PluginHostControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -63,6 +61,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WCFPluginFramework\WCFPluginFramework.csproj">
+      <Project>{70c13526-cc43-45a7-9075-3a59618f97bd}</Project>
+      <Name>WCFPluginFramework</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

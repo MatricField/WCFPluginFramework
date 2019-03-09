@@ -4,20 +4,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WCFPluginFramework;
+using WCFPluginFramework.Common;
 
 namespace TestPlugin
 {
     public class Plugin1 :
-        IPlugin
+        PluginBase
     {
-        public PluginCapability GetCapabilities()
-        {
-            return PluginCapability.None;
-        }
+        private static readonly PluginInfo INFO =
+            new PluginInfo()
+            {
+                Author = new PluginAuthorInfo()
+                {
+                    Name = "MatrixField",
+                    Contact = "Go talk to god"
+                },
+                Description = "Aaaaaaaaaah",
+                DisplayName = "Plugin1",
+                Guid = typeof(Plugin1).GUID
+            };
 
-        public int HeartBeat(int data)
-        {
-            return data;
-        }
+        private const PluginCapability CAPABILITY =
+            PluginCapability.None;
+
+        protected override PluginInfo PluginInfo => INFO;
+
+        protected override PluginCapability PluginCapability => CAPABILITY;
     }
 }

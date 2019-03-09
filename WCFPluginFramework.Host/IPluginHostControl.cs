@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
+using WCFPluginFramework.Common;
+using WCFPluginFramework.Metadata;
 
 namespace WCFPluginFramework.Host
 {
@@ -15,5 +13,12 @@ namespace WCFPluginFramework.Host
     {
         [OperationContract]
         void Shutdown();
+
+        [OperationContract]
+        IEnumerable<PluginDescription> EnumerateAvailablePlugins();
+
+        [OperationContract]
+        [FaultContract(typeof(SerializableException))]
+        void LoadPluginAssembly(string path);
     }
 }

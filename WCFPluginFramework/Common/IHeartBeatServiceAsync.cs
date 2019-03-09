@@ -5,12 +5,12 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WCFPluginFramework.Host
+namespace WCFPluginFramework.Common
 {
-    [ServiceContract]
-    public interface IHeartBeatService
+    [ServiceContract(Name = nameof(IHeartBeatService))]
+    public interface IHeartBeatServiceAsync
     {
         [OperationContract]
-        int HeartBeat(int data);
+        Task<int> HeartBeatAsync(int data);
     }
 }

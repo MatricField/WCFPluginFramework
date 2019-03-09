@@ -1,19 +1,21 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
+using System.Reflection;
 using System.ServiceModel;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using WCFPluginFramework.Metadata;
+using static WCFPluginFramework.Common.ExceptionExtension;
 
 namespace WCFPluginFramework.Host
 {
-    // NOTE: You can use the "Rename" command on the "Refactor" menu to change the class name "PluginHostControl" in both code and config file together.
+    [ServiceBehavior(IncludeExceptionDetailInFaults = true)]
     public class PluginHostControl : IPluginHostControl
     {
+        private ConcurrentDictionary<Guid, PluginHost> HostedPlugins =
+            new ConcurrentDictionary<Guid, PluginHost>();
+
         public int HeartBeat(int data)
         {
             #if DEBUG
@@ -25,9 +27,62 @@ namespace WCFPluginFramework.Host
         public void Shutdown()
         {
             #if DEBUG
-            Debug.WriteLine($"Shutting down"); 
+            Console.WriteLine($"Shutting down"); 
             #endif
             Program.Shutdown();
+        }
+
+        public IEnumerable<PluginDescription> EnumerateAvailablePlugins()
+        {
+            try
+            {
+                var ret = new List<PluginDescription>();
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    foreach (var type in asm.GetTypes())
+                    {
+                        if (type.GetCustomAttribute<PluginDescriptionAttribute>() != null && !type.IsGenericType)
+                        {
+                            Console.WriteLine($"Loading plugin info of {type.Name}");
+                            var provider = Activator.CreateInstance(type) as IPluginDescriptionProvider;
+                            if (provider != null)
+                            {
+                                ret.Add(provider.Description);
+                            }
+                        }
+                    }
+                }
+                return ret;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                return Enumerable.Empty<PluginDescription>();
+            }
+        }
+
+        public void LoadPluginAssembly(string path)
+        {
+            try
+            {
+                var asm = Assembly.LoadFile(path);
+            }
+            catch (Exception ex)
+            {
+                switch(ex)
+                {
+                    case ArgumentNullException _:
+                    case ArgumentException _:
+                    case FileLoadException _:
+                    case FileNotFoundException _:
+                    case BadImageFormatException _:
+                        ex.ThrowFaultedExceptionFromThis();
+                        break;
+                    default:
+                        throw;
+                }
+            }
         }
 
         public static ServiceHost MakePluginHostControlService()
@@ -54,14 +109,12 @@ namespace WCFPluginFramework.Host
                 new Uri(GetRawArg());
             Console.WriteLine($"pluginBaseAddress:{pluginBaseAddress}");
             var serviceHost = new ServiceHost(typeof(PluginHostControl), pluginBaseAddress);
-            serviceHost.PrintEndPoints();
             serviceHost.AddServiceEndpoint(
                 typeof(IPluginHostControl),
                 new NetNamedPipeBinding(),
                 nameof(PluginHostControl)
                 );
-            serviceHost.PrintEndPoints();
-            serviceHost.AddMetaDataExchange(pluginBaseAddress);
+            serviceHost.AddMetaDataExchange();
             serviceHost.PrintEndPoints();
             return serviceHost;
         }

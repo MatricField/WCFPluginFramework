@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WCFPluginFramework.Host
+namespace TestConsole
 {
     public class Job : IDisposable
     {
