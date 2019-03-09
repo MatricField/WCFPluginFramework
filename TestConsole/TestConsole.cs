@@ -18,13 +18,17 @@ namespace TestConsole
             var pluginBaseAddress =
                 new Uri(NamedPipeBaseUri + Guid.NewGuid() + "/");
             var hostProcess = RunHost(pluginBaseAddress);
+            if(!hostProcess.HasExited)
+            {
+                Console.WriteLine("Host process started");
+            }
             try
             {
-                var pluginHostControl = ConnectToHostController(pluginBaseAddress);
+                var pluginHostControl = await ConnectToHostControllerAsync(pluginBaseAddress);
+                Console.WriteLine("Connected, Press Cancel key to stop");
                 var cancellation = new CancellationTokenSource();
                 var heartbeat = RunHeartBeatLoop(pluginHostControl, cancellation.Token);
-                Console.WriteLine("Host running, press any key to shutdown");
-                Console.ReadKey();
+                await WaitForCancelKey();
                 cancellation.Cancel();
                 try
                 {
@@ -44,6 +48,21 @@ namespace TestConsole
             }
         }
 
+        static async Task WaitForCancelKey()
+        {
+            using (var singal = new SemaphoreSlim(0, 1))
+            {
+                void OnCancel(object o, ConsoleCancelEventArgs e)
+                {
+                    singal.Release();
+                    e.Cancel = true;
+                }
+                Console.CancelKeyPress += OnCancel;
+                await singal.WaitAsync();
+                Console.CancelKeyPress -= OnCancel;
+            }
+        }
+
         static async Task RunHeartBeatLoop(IPluginHostControlAsync pluginHostControl, CancellationToken token)
         {
             var rand = new Random();
@@ -53,9 +72,8 @@ namespace TestConsole
                 var delayPeriod = Task.Delay(TimeSpan.FromSeconds(1));
                 var beat = rand.Next();
                 var responseTask = pluginHostControl.HeartBeatAsync(beat);
-                var responseOrTimedOut =
-                    await Task.WhenAny(responseTask, Task.Delay(TimeSpan.FromMilliseconds(700)));
-                if (responseOrTimedOut == responseTask)
+                var any = await Task.WhenAny(responseTask, Task.Delay(TimeSpan.FromMilliseconds(100)));
+                if (any == responseTask)
                 {
                     var repeat = await responseTask;
                     if (repeat != beat)
@@ -69,29 +87,48 @@ namespace TestConsole
                 }
                 else
                 {
-                    Console.WriteLine("Heart beat timed out");
-                }
-                await delayPeriod;
+                Console.WriteLine("Heart beat timed out");
+            }
+            await delayPeriod;
             }
         }
 
-        static IPluginHostControlAsync ConnectToHostController(Uri pluginBaseAddress)
+        static async Task<IPluginHostControlAsync> ConnectToHostControllerAsync(Uri pluginBaseAddress)
         {
             var binding = new NetNamedPipeBinding();
             var address = new EndpointAddress(new Uri(pluginBaseAddress, nameof(PluginHostControl)));
             var factory = new ChannelFactory<IPluginHostControlAsync>(binding, address);
-            return factory.CreateChannel();
+            const int MaxRetry = 5;
+            const int RetryDelay = 1;
+            for (int i = 0; i < MaxRetry; ++i)
+            {
+                var delay = Task.Delay(TimeSpan.FromSeconds(RetryDelay));
+                var proxy = factory.CreateChannel();
+                try
+                {
+                    return proxy;
+
+                }
+                catch (EndpointNotFoundException)
+                {
+                    Console.WriteLine("Endpoint not available, retrying...");
+                    await delay;
+                }
+            }
+            throw new CommunicationException();
         }
 
         static Process RunHost(Uri pluginBaseAddress)
         {
+            var path = typeof(IHeartBeatService).Assembly.Location;
             var info =
                 new ProcessStartInfo()
                 {
-                    UseShellExecute = false,
-                    FileName = "WCFPluginFramework.Host.exe",
-                    Arguments = pluginBaseAddress.ToString(),
-                    WindowStyle = ProcessWindowStyle.Hidden
+                    UseShellExecute = true,
+                    FileName = Path.GetFileName(path),
+                    WorkingDirectory = Path.GetDirectoryName(path),
+                    Arguments = pluginBaseAddress.ToString()
+                    //WindowStyle = ProcessWindowStyle.Hidden
                 };
             return Process.Start(info);
         }

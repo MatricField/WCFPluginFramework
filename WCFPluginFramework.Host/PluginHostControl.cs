@@ -45,13 +45,17 @@ namespace WCFPluginFramework.Host
             }
             var pluginBaseAddress =
                 new Uri(GetRawArg());
+            Console.WriteLine($"pluginBaseAddress:{pluginBaseAddress}");
             var serviceHost = new ServiceHost(typeof(PluginHostControl), pluginBaseAddress);
+            serviceHost.PrintEndPoints();
             serviceHost.AddServiceEndpoint(
-                    typeof(IPluginHostControl),
-                    new NetNamedPipeBinding(),
-                    //new Uri(pluginBaseAddress, nameof(PluginHostControl)));
-                    nameof(PluginHostControl));
+                typeof(IPluginHostControl),
+                new NetNamedPipeBinding(),
+                nameof(PluginHostControl)
+                );
+            serviceHost.PrintEndPoints();
             serviceHost.AddMetaDataExchange(pluginBaseAddress);
+            serviceHost.PrintEndPoints();
             return serviceHost;
         }
     }

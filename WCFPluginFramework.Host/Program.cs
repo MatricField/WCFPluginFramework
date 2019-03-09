@@ -17,12 +17,19 @@ namespace WCFPluginFramework.Host
             KeepAlive.Release();
         }
 
-        static async Task Main()
+        static async Task Main(string[] args)
         {
+            Console.WriteLine("Host started");
+            Console.WriteLine("Command Line args:");
+            foreach(var arg in args)
+            {
+                Console.WriteLine(arg);
+            }
             KeepAlive = new SemaphoreSlim(0, 1);
             using (var controlService = PluginHostControl.MakePluginHostControlService())
             {
                 controlService.Open();
+                Console.WriteLine("Control Service started");
                 await KeepAlive.WaitAsync();
                 controlService.Close();
             }
