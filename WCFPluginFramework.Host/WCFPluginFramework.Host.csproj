@@ -55,6 +55,7 @@
     <Compile Include="IHeartBeatService.cs" />
     <Compile Include="IPluginHostControlAsync.cs" />
     <Compile Include="IPluginHostControl.cs" />
+    <Compile Include="JobManagement.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="PluginHostControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

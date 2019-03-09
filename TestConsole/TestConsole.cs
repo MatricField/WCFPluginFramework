@@ -15,15 +15,14 @@ namespace TestConsole
             "net.pipe://localhost/";
         static async Task Main()
         {
-            var pluginBaseAddress =
-                new Uri(NamedPipeBaseUri + Guid.NewGuid() + "/");
-            var hostProcess = RunHost(pluginBaseAddress);
-            if(!hostProcess.HasExited)
+            using (var job = new Job())
             {
-                Console.WriteLine("Host process started");
-            }
-            try
-            {
+                var pluginBaseAddress =
+                    new Uri(NamedPipeBaseUri + Guid.NewGuid() + "/");
+                var hostProcess = RunHost(pluginBaseAddress);
+                job.AddProcess(hostProcess);
+                Console.WriteLine($"Host process started PID={hostProcess.Id}");
+
                 var pluginHostControl = await ConnectToHostControllerAsync(pluginBaseAddress);
                 Console.WriteLine("Connected, Press Cancel key to stop");
                 var cancellation = new CancellationTokenSource();
@@ -38,13 +37,6 @@ namespace TestConsole
                 await pluginHostControl.ShutdownAsync();
                 Console.WriteLine("Shutting down");
                 hostProcess.WaitForExit();
-            }
-            finally
-            {
-                if(!hostProcess.HasExited)
-                {
-                    hostProcess.Kill();
-                }
             }
         }
 
@@ -100,14 +92,18 @@ namespace TestConsole
             var factory = new ChannelFactory<IPluginHostControlAsync>(binding, address);
             const int MaxRetry = 5;
             const int RetryDelay = 1;
+            var rand = new Random();
             for (int i = 0; i < MaxRetry; ++i)
             {
                 var delay = Task.Delay(TimeSpan.FromSeconds(RetryDelay));
                 var proxy = factory.CreateChannel();
+                var beat = rand.Next();
                 try
                 {
-                    return proxy;
-
+                    if(await proxy.HeartBeatAsync(beat) == beat)
+                    {
+                        return proxy;
+                    }
                 }
                 catch (EndpointNotFoundException)
                 {
@@ -121,6 +117,8 @@ namespace TestConsole
         static Process RunHost(Uri pluginBaseAddress)
         {
             var path = typeof(IHeartBeatService).Assembly.Location;
+
+            #if DEBUG
             var info =
                 new ProcessStartInfo()
                 {
@@ -128,8 +126,18 @@ namespace TestConsole
                     FileName = Path.GetFileName(path),
                     WorkingDirectory = Path.GetDirectoryName(path),
                     Arguments = pluginBaseAddress.ToString()
-                    //WindowStyle = ProcessWindowStyle.Hidden
                 };
+            #else
+            var info =
+                new ProcessStartInfo()
+                {
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    FileName = Path.GetFileName(path),
+                    WorkingDirectory = Path.GetDirectoryName(path),
+                    Arguments = pluginBaseAddress.ToString()
+                };
+            #endif
             return Process.Start(info);
         }
     }

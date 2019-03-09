@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -15,11 +16,17 @@ namespace WCFPluginFramework.Host
     {
         public int HeartBeat(int data)
         {
+            #if DEBUG
+            Console.WriteLine($"Heart beat: {data}");
+            #endif
             return data;
         }
 
         public void Shutdown()
         {
+            #if DEBUG
+            Debug.WriteLine($"Shutting down"); 
+            #endif
             Program.Shutdown();
         }
 
