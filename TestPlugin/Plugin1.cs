@@ -26,8 +26,8 @@ namespace TestPlugin
         private const PluginCapability CAPABILITY =
             PluginCapability.None;
 
-        protected override PluginInfo PluginInfo => INFO;
+        public override PluginInfo GetPluginInfo() => INFO;
 
-        protected override PluginCapability PluginCapability => CAPABILITY;
+        public override PluginCapability GetCapabilities() => CAPABILITY;
     }
 }

@@ -19,7 +19,7 @@ namespace WCFPluginFramework.Host
         Task<IEnumerable<PluginDescription>> EnumerateAvailablePluginsAsync();
 
         [OperationContract]
-        Task<IReadOnlyDictionary<Uri, string>> EnumerateEndPointsAsync();
+        Task<IDictionary<Uri, string>> EnumerateEndPointsAsync();
 
         [OperationContract]
         Task LoadPluginAssemblyAsync(string path);

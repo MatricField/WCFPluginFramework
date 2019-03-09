@@ -6,6 +6,7 @@ using WCFPluginFramework.Common;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace TestConsole
 {
@@ -24,14 +25,15 @@ namespace TestConsole
                 Console.WriteLine($"Host process started PID={hostProcess.Id}");
 
                 var pluginHostControl = await ConnectToHostControllerAsync(pluginBaseAddress);
-                Console.WriteLine("Connected, Press Cancel key to continue");
                 var cancellation = new CancellationTokenSource();
                 var heartbeat = RunHeartBeatLoop(pluginHostControl, cancellation.Token);
-                await WaitForCancelKey();
+                await WaitForAnyKey();
 
                 await LoadPluginAssemblyAndListPlugins(pluginHostControl);
-                Console.WriteLine("Press Cancel key to continue");
-                await WaitForCancelKey();
+                await WaitForAnyKey();
+
+                await QueryAndTestPlugins(pluginHostControl);
+                await WaitForAnyKey();
 
                 cancellation.Cancel();
                 try
@@ -45,53 +47,72 @@ namespace TestConsole
             }
         }
 
-        static async Task LoadPluginAssemblyAndListPlugins(IPluginHostControlAsync pluginHost)
+        static async Task QueryAndTestPlugins(IPluginHostControlAsync pluginHost)
         {
+            var tasks = new List<Task>();
+            foreach(var (uri, qualifiedName) in await pluginHost.EnumerateEndPointsAsync())
+            {
+                if(qualifiedName == typeof(IPlugin).AssemblyQualifiedName)
+                {
+                    var plugin = await ConnectAsync<IPluginAsync>(uri);
+                    tasks.Add(TestPlugin(plugin));
+                }
+            }
+            await Task.WhenAll(tasks);
+        }
+
+        static async Task TestPlugin(IPluginAsync plugin)
+        {
+            var cancellation = new CancellationTokenSource();
+            var heartbeat = RunHeartBeatLoop(plugin, cancellation.Token);
+
+            var info = await plugin.GetPluginInfoAsync();
+
+            Console.WriteLine(info);
+            await Task.Delay(TimeSpan.FromMinutes(1));
+
+            cancellation.Cancel();
             try
             {
-                await pluginHost.LoadPluginAssemblyAsync(typeof(TestPlugin.Plugin1).Assembly.Location);
-                var availablePlugins = await pluginHost.EnumerateAvailablePluginsAsync();
-                Console.WriteLine("Available plugins");
-                foreach (var plugin in availablePlugins)
-                {
-                    Console.WriteLine($"{plugin.ServiceName}:");
-                    Console.WriteLine($"Implementation: {plugin.ImplementationName}");
-                    Console.WriteLine("Contracts:");
-                    foreach (var contrct in plugin.Contracts)
-                    {
-                        Console.WriteLine($"    {contrct.ContractInterfaceName}");
-                        Console.WriteLine($"    Endpoints:");
-                        foreach(var endpoint in contrct.EndPoints)
-                        {
-                            Console.WriteLine($"        {endpoint}");
-                        }
-                    }
-                    Console.WriteLine();
-                }
+                await heartbeat;
             }
-            catch(FaultException<SerializableException> ex)
-            {
-                var oex = Activator.CreateInstance(ex.Detail.OriginalException) as Exception;
-                throw oex;
-            }
+            catch (OperationCanceledException) { }
         }
 
-        static async Task WaitForCancelKey()
+        static async Task LoadPluginAssemblyAndListPlugins(IPluginHostControlAsync pluginHost)
         {
-            using (var singal = new SemaphoreSlim(0, 1))
+            await pluginHost.LoadPluginAssemblyAsync(typeof(TestPlugin.Plugin1).Assembly.Location);
+            var availablePlugins = await pluginHost.EnumerateAvailablePluginsAsync();
+            Console.WriteLine("Available plugins");
+            foreach (var plugin in availablePlugins)
             {
-                void OnCancel(object o, ConsoleCancelEventArgs e)
+                Console.WriteLine($"{plugin.ServiceName}:");
+                Console.WriteLine($"Implementation: {plugin.ImplementationName}");
+                Console.WriteLine("Contracts:");
+                foreach (var contrct in plugin.Contracts)
                 {
-                    singal.Release();
-                    e.Cancel = true;
+                    Console.WriteLine($"    {contrct.ContractInterfaceName}");
+                    Console.WriteLine($"    Endpoints:");
+                    foreach(var endpoint in contrct.EndPoints)
+                    {
+                        Console.WriteLine($"        {endpoint}");
+                    }
                 }
-                Console.CancelKeyPress += OnCancel;
-                await singal.WaitAsync();
-                Console.CancelKeyPress -= OnCancel;
+                Console.WriteLine();
             }
         }
 
-        static async Task RunHeartBeatLoop(IPluginHostControlAsync pluginHostControl, CancellationToken token)
+        static async Task WaitForAnyKey()
+        {
+            Console.WriteLine("Press any key to continue...");
+            while (!Console.KeyAvailable)
+            {
+                await Task.Delay(30);
+            }
+            Console.ReadKey();
+        }
+
+        static async Task RunHeartBeatLoop(IHeartBeatServiceAsync heartBeatService, CancellationToken token)
         {
             var rand = new Random();
             for (; ; )
@@ -99,7 +120,7 @@ namespace TestConsole
                 token.ThrowIfCancellationRequested();
                 var delayPeriod = Task.Delay(TimeSpan.FromSeconds(1));
                 var beat = rand.Next();
-                var responseTask = pluginHostControl.HeartBeatAsync(beat);
+                var responseTask = heartBeatService.HeartBeatAsync(beat);
                 var any = await Task.WhenAny(responseTask, Task.Delay(TimeSpan.FromMilliseconds(100)));
                 if (any == responseTask)
                 {
@@ -121,11 +142,13 @@ namespace TestConsole
             }
         }
 
-        static async Task<IPluginHostControlAsync> ConnectToHostControllerAsync(Uri pluginBaseAddress)
+        static async Task<IContractT> ConnectAsync<IContractT>(Uri address)
+            where IContractT : IHeartBeatServiceAsync
         {
-            var binding = new NetNamedPipeBinding();
-            var address = new EndpointAddress(new Uri(pluginBaseAddress, nameof(PluginHostControl)));
-            var factory = new ChannelFactory<IPluginHostControlAsync>(binding, address);
+            var factory = 
+                new ChannelFactory<IContractT>(
+                    new NetNamedPipeBinding(),
+                    new EndpointAddress(address));
             const int MaxRetry = 5;
             const int RetryDelay = 1;
             var rand = new Random();
@@ -136,7 +159,7 @@ namespace TestConsole
                 var beat = rand.Next();
                 try
                 {
-                    if(await proxy.HeartBeatAsync(beat) == beat)
+                    if (await proxy.HeartBeatAsync(beat) == beat)
                     {
                         return proxy;
                     }
@@ -148,6 +171,36 @@ namespace TestConsole
                 }
             }
             throw new CommunicationException();
+        }
+
+        static Task<IPluginHostControlAsync> ConnectToHostControllerAsync(Uri pluginBaseAddress)
+        {
+            return ConnectAsync<IPluginHostControlAsync>(new Uri(pluginBaseAddress, nameof(PluginHostControl)));
+            //var binding = new NetNamedPipeBinding();
+            //var address = new EndpointAddress(new Uri(pluginBaseAddress, nameof(PluginHostControl)));
+            //var factory = new ChannelFactory<IPluginHostControlAsync>(binding, address);
+            //const int MaxRetry = 5;
+            //const int RetryDelay = 1;
+            //var rand = new Random();
+            //for (int i = 0; i < MaxRetry; ++i)
+            //{
+            //    var delay = Task.Delay(TimeSpan.FromSeconds(RetryDelay));
+            //    var proxy = factory.CreateChannel();
+            //    var beat = rand.Next();
+            //    try
+            //    {
+            //        if(await proxy.HeartBeatAsync(beat) == beat)
+            //        {
+            //            return proxy;
+            //        }
+            //    }
+            //    catch (EndpointNotFoundException)
+            //    {
+            //        Console.WriteLine("Endpoint not available, retrying...");
+            //        await delay;
+            //    }
+            //}
+            //throw new CommunicationException();
         }
 
         static Process RunHost(Uri pluginBaseAddress)

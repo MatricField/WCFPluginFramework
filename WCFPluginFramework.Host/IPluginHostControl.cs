@@ -18,7 +18,7 @@ namespace WCFPluginFramework.Host
         IEnumerable<PluginDescription> EnumerateAvailablePlugins();
 
         [OperationContract]
-        IReadOnlyDictionary<Uri, string> EnumerateEndPoints();
+        IDictionary<Uri, string> EnumerateEndPoints();
 
         [OperationContract]
         void LoadPluginAssembly(string path);

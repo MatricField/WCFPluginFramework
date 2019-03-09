@@ -15,10 +15,6 @@ namespace WCFPluginFramework
     public abstract class PluginBase :
         IPlugin
     {
-        protected abstract PluginInfo PluginInfo { get; }
-
-        protected abstract PluginCapability PluginCapability { get; }
-
         public void Connect()
         {
             try
@@ -61,9 +57,9 @@ namespace WCFPluginFramework
 
         }
 
-        public PluginCapability GetCapabilities() => PluginCapability;
+        public abstract PluginCapability GetCapabilities();
 
-        public PluginInfo GetPluginInfo() => PluginInfo;
+        public abstract PluginInfo GetPluginInfo();
 
         public int HeartBeat(int data) => data;
     }

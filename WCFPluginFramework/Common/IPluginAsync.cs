@@ -6,7 +6,7 @@ namespace WCFPluginFramework.Common
 {
     [ServiceContract(SessionMode = SessionMode.Required, Name = nameof(IPlugin))]
     public interface IPluginAsync:
-        IHeartBeatService
+        IHeartBeatServiceAsync
     {
         [OperationContract(IsInitiating = true)]
         [FaultContract(typeof(SerializableException))]

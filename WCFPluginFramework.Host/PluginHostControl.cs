@@ -75,7 +75,7 @@ namespace WCFPluginFramework.Host
             }
         }
 
-        public IReadOnlyDictionary<Uri, string> EnumerateEndPoints()
+        public IDictionary<Uri, string> EnumerateEndPoints()
         {
             var dict = new Dictionary<Uri, string>();
             foreach(var h in PluginHosts)
