@@ -18,19 +18,30 @@ namespace TestConsole
             var pluginBaseAddress =
                 new Uri(NamedPipeBaseUri + Guid.NewGuid() + "/");
             var hostProcess = RunHost(pluginBaseAddress);
-            var pluginHostControl = ConnectToHostController(pluginBaseAddress);
-            var cancellation = new CancellationTokenSource();
-            var heartbeat = RunHeartBeatLoop(pluginHostControl, cancellation.Token);
-            Console.WriteLine("Host running, press any key to shutdown");
-            Console.ReadKey();
-            cancellation.Cancel();
             try
             {
-                await heartbeat;
+                var pluginHostControl = ConnectToHostController(pluginBaseAddress);
+                var cancellation = new CancellationTokenSource();
+                var heartbeat = RunHeartBeatLoop(pluginHostControl, cancellation.Token);
+                Console.WriteLine("Host running, press any key to shutdown");
+                Console.ReadKey();
+                cancellation.Cancel();
+                try
+                {
+                    await heartbeat;
+                }
+                catch (OperationCanceledException) { }
+                await pluginHostControl.ShutdownAsync();
+                Console.WriteLine("Shutting down");
+                hostProcess.WaitForExit();
             }
-            catch (OperationCanceledException) { }
-            await pluginHostControl.ShutdownAsync();
-            hostProcess.WaitForExit();
+            finally
+            {
+                if(!hostProcess.HasExited)
+                {
+                    hostProcess.Kill();
+                }
+            }
         }
 
         static async Task RunHeartBeatLoop(IPluginHostControlAsync pluginHostControl, CancellationToken token)
@@ -80,7 +91,7 @@ namespace TestConsole
                     UseShellExecute = false,
                     FileName = "WCFPluginFramework.Host.exe",
                     Arguments = pluginBaseAddress.ToString(),
-                    //WindowStyle = ProcessWindowStyle.Hidden
+                    WindowStyle = ProcessWindowStyle.Hidden
                 };
             return Process.Start(info);
         }

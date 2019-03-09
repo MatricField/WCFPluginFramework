@@ -20,7 +20,6 @@ namespace WCFPluginFramework.Host
 
         public void Shutdown()
         {
-            Console.WriteLine("Shutting down");
             Program.Shutdown();
         }
 

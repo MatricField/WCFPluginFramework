@@ -47,6 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IHeartBeatServiceAsync.cs" />
+    <Compile Include="IHeartBeatService.cs" />
     <Compile Include="IPluginHostControlAsync.cs" />
     <Compile Include="IPluginHostControl.cs" />
     <Compile Include="Program.cs" />
