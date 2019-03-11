@@ -17,9 +17,6 @@ namespace WCFPluginFramework.Common
         Task DisconnectAsync();
 
         [OperationContract]
-        Task<PluginCapability> GetCapabilitiesAsync();
-
-        [OperationContract]
         Task<PluginInfo> GetPluginInfoAsync();
     }
 }

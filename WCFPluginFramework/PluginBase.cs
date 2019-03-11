@@ -53,8 +53,6 @@ namespace WCFPluginFramework
 
         }
 
-        public abstract PluginCapability GetCapabilities();
-
         public abstract PluginInfo GetPluginInfo();
 
         public int HeartBeat(int data) => data;

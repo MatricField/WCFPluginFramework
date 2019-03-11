@@ -52,7 +52,6 @@
     <Compile Include="Metadata\PluginDescription.cs" />
     <Compile Include="Metadata\ServiceContractDescription.cs" />
     <Compile Include="Common\PluginAuthorInfo.cs" />
-    <Compile Include="Common\PluginCapability.cs" />
     <Compile Include="Metadata\PluginDescriptionAttribute.cs" />
     <Compile Include="Common\PluginInfo.cs" />
     <Compile Include="PluginBase.cs" />

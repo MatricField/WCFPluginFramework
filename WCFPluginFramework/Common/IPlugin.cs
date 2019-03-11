@@ -16,9 +16,6 @@ namespace WCFPluginFramework.Common
         void Disconnect();
 
         [OperationContract]
-        PluginCapability GetCapabilities();
-
-        [OperationContract]
         PluginInfo GetPluginInfo();
     }
 }

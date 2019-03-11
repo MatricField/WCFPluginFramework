@@ -23,11 +23,6 @@ namespace TestPlugin
                 DisplayName = "Plugin1"
             };
 
-        private const PluginCapability CAPABILITY =
-            PluginCapability.None;
-
         public override PluginInfo GetPluginInfo() => INFO;
-
-        public override PluginCapability GetCapabilities() => CAPABILITY;
     }
 }
