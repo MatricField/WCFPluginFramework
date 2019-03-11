@@ -1,27 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ServiceModel;
-using System.Threading.Tasks;
 using WCFPluginFramework.Common;
 using WCFPluginFramework.Metadata;
 
 namespace WCFPluginFramework.Host
 {
     // NOTE: You can use the "Rename" command on the "Refactor" menu to change the interface name "IPluginHostControl" in both code and config file together.
-    [ServiceContract(Name = nameof(IPluginHostControl))]
-    public interface IPluginHostControlAsync:
-        IHeartBeatServiceAsync
+    [ServiceContract]
+    public interface IPluginServerControl :
+        IHeartBeatService
     {
         [OperationContract]
-        Task ShutdownAsync();
+        void Shutdown();
 
         [OperationContract]
-        Task<IEnumerable<PluginDescription>> EnumerateAvailablePluginsAsync();
+        IEnumerable<PluginDescription> EnumerateAvailablePlugins();
 
         [OperationContract]
-        Task<IDictionary<Uri, string>> EnumerateEndPointsAsync();
+        IDictionary<Uri, string> EnumerateEndPoints();
 
         [OperationContract]
-        Task LoadPluginAssemblyAsync(string path);
+        void LoadPluginAssembly(string path);
     }
 }

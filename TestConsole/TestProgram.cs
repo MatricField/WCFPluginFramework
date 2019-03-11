@@ -47,7 +47,7 @@ namespace TestConsole
             }
         }
 
-        static async Task QueryAndTestPlugins(IPluginHostControlAsync pluginHost)
+        static async Task QueryAndTestPlugins(IPluginServerControlAsync pluginHost)
         {
             var tasks = new List<Task>();
             foreach(var (uri, qualifiedName) in await pluginHost.EnumerateEndPointsAsync())
@@ -79,7 +79,7 @@ namespace TestConsole
             catch (OperationCanceledException) { }
         }
 
-        static async Task LoadPluginAssemblyAndListPlugins(IPluginHostControlAsync pluginHost)
+        static async Task LoadPluginAssemblyAndListPlugins(IPluginServerControlAsync pluginHost)
         {
             await pluginHost.LoadPluginAssemblyAsync(typeof(TestPlugin.Plugin1).Assembly.Location);
             var availablePlugins = await pluginHost.EnumerateAvailablePluginsAsync();
@@ -173,9 +173,9 @@ namespace TestConsole
             throw new CommunicationException();
         }
 
-        static Task<IPluginHostControlAsync> ConnectToHostControllerAsync(Uri pluginBaseAddress)
+        static Task<IPluginServerControlAsync> ConnectToHostControllerAsync(Uri pluginBaseAddress)
         {
-            return ConnectAsync<IPluginHostControlAsync>(new Uri(pluginBaseAddress, nameof(PluginHostControl)));
+            return ConnectAsync<IPluginServerControlAsync>(new Uri(pluginBaseAddress, nameof(PluginServerControl)));
             //var binding = new NetNamedPipeBinding();
             //var address = new EndpointAddress(new Uri(pluginBaseAddress, nameof(PluginHostControl)));
             //var factory = new ChannelFactory<IPluginHostControlAsync>(binding, address);
@@ -205,7 +205,7 @@ namespace TestConsole
 
         static Process RunHost(Uri pluginBaseAddress)
         {
-            var path = typeof(PluginHostControl).Assembly.Location;
+            var path = typeof(PluginServerControl).Assembly.Location;
             var info =
                 new ProcessStartInfo()
                 {

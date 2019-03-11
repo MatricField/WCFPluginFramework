@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPlugin", "TestPlugin\TestPlugin.csproj", "{DCBFE3A1-0465-422E-ACA4-A235B66526E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCFPluginFramework.Client", "WCFPluginFramework.Client\WCFPluginFramework.Client.csproj", "{A944FC8E-C716-44EE-B87F-4222D7B2FD77}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{DCBFE3A1-0465-422E-ACA4-A235B66526E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DCBFE3A1-0465-422E-ACA4-A235B66526E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DCBFE3A1-0465-422E-ACA4-A235B66526E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A944FC8E-C716-44EE-B87F-4222D7B2FD77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A944FC8E-C716-44EE-B87F-4222D7B2FD77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A944FC8E-C716-44EE-B87F-4222D7B2FD77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A944FC8E-C716-44EE-B87F-4222D7B2FD77}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

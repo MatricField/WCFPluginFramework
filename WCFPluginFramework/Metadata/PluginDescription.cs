@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using WCFPluginFramework.Common;
 
 namespace WCFPluginFramework.Metadata
 {
@@ -14,7 +9,7 @@ namespace WCFPluginFramework.Metadata
         /// <summary>
         /// Assembly qualified name of implementation class
         /// </summary>
-        [DataMember]
+        [IgnoreDataMember]
         public string ImplementationName { get; set; }
 
         /// <summary>

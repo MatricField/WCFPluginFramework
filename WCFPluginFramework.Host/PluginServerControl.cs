@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.ServiceModel;
 using WCFPluginFramework.Metadata;
-using static WCFPluginFramework.Common.ExceptionExtension;
 
 namespace WCFPluginFramework.Host
 {
     [ServiceBehavior(IncludeExceptionDetailInFaults = true, InstanceContextMode = InstanceContextMode.Single)]
-    public class PluginHostControl : IPluginHostControl
+    public class PluginServerControl : IPluginServerControl
     {
-        private ConcurrentBag<PluginHost> PluginHosts = new ConcurrentBag<PluginHost>();
+        private ConcurrentBag<ServiceHost> PluginHosts = new ConcurrentBag<ServiceHost>();
 
-        private Uri PluginBaseAddress;
+        private ConcurrentDictionary<Guid, PluginDescription> PluginDescriptions = 
+            new ConcurrentDictionary<Guid, PluginDescription>();
 
-        private PluginHostControl(Uri pluginBaseAddress)
+        private Uri[] ServerBaseAddresses;
+
+        private PluginServerControl(params Uri[] pluginBaseAddress)
         {
-            PluginBaseAddress = pluginBaseAddress;
+            ServerBaseAddresses = pluginBaseAddress;
         }
 
         public int HeartBeat(int data)
@@ -53,8 +54,8 @@ namespace WCFPluginFramework.Host
             var asm = Assembly.LoadFile(path);
             foreach (var description in EnumerateAvailablePlugins(asm))
             {
-                var host = new PluginHost(description, PluginBaseAddress);
-                host.ServiceHost.Open();
+                var host = ServiceHostFactory.CreatePlugin(description, ServerBaseAddresses);
+                host.Open();
                 PluginHosts.Add(host);
             }
         }
@@ -80,7 +81,7 @@ namespace WCFPluginFramework.Host
             var dict = new Dictionary<Uri, string>();
             foreach(var h in PluginHosts)
             {
-                foreach(var endpoint in h.Endpoints)
+                foreach(var endpoint in h.Description.Endpoints)
                 {
                     dict.Add(endpoint.Address.Uri, endpoint.Contract.ContractType.AssemblyQualifiedName);
                 }
@@ -88,40 +89,20 @@ namespace WCFPluginFramework.Host
             return dict;
         }
 
-        public static ServiceHost MakePluginHostControlService()
+        public static ServiceHost CreateService(params Uri[] pluginBaseAddress)
         {
-            var pluginBaseAddress = GetBaseAddress();
-            var hostControl = new PluginHostControl(pluginBaseAddress);
+            var hostControl = new PluginServerControl(pluginBaseAddress);
             var serviceHost = new ServiceHost(hostControl, pluginBaseAddress);
             serviceHost.AddServiceEndpoint(
-                typeof(IPluginHostControl),
+                typeof(IPluginServerControl),
                 new NetNamedPipeBinding(),
-                nameof(PluginHostControl)
+                nameof(PluginServerControl)
                 );
             serviceHost.PrintEndPoints();
 
             Console.WriteLine($"pluginBaseAddress:{pluginBaseAddress}");
 
             return serviceHost;
-        }
-
-        private static Uri GetBaseAddress()
-        {
-            var assemblyName =
-                Path.GetFileName(typeof(PluginHostControl).Assembly.Location);
-            var commandLine =
-                Environment.CommandLine;
-
-            var arg0 = Environment.GetCommandLineArgs()[0];
-            if (arg0.Contains(assemblyName))
-            {
-                var index = commandLine.IndexOf(arg0);
-                commandLine = commandLine
-                    .Substring(index + arg0.Length)
-                    .TrimStart(' ', '"')
-                    .TrimEnd();
-            }
-            return new Uri(commandLine);
         }
     }
 }
